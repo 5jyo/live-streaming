@@ -12,3 +12,5 @@ CREATE TABLE broadcast
 );
 
 INSERT INTO broadcast VALUES (1, 'first', 'test', null, null, now(), now(), 'READY', 0);
+INSERT INTO broadcast VALUES (2, 'second', 'yongjoon straming', null, null, now(), now(), 'READY', 0);
+INSERT INTO broadcast VALUES (3, 'third', 'gaming streaming', null, null, now(), now(), 'READY', 0);

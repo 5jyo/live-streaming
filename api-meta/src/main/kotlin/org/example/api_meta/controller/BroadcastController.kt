@@ -1,5 +1,6 @@
 package org.example.api_meta.controller
 
+import org.example.api_meta.dto.Broadcast
 import org.example.api_meta.service.BroadcastService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
@@ -8,10 +9,9 @@ import org.springframework.web.bind.annotation.RestController
 class BroadcastController(
         private val broadcastService: BroadcastService
 ) {
-
     @GetMapping("/broadcasts")
-    fun list(): List<String> {
-        return listOf("broadcast1")
+    fun list(): List<Broadcast> {
+        return broadcastService.getList()
     }
 
 }
