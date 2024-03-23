@@ -5,17 +5,13 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.4.0/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/mvp.css">
 </head>
 <script>
 
 </script>
 <body>
-<!--<h1>test</h1>-->
-<!--<input id="room-id"/>-->
-<!--<button id="connect-btn">connect</button>-->
 
 <main>
     <div id="welcome">
@@ -24,226 +20,114 @@
             <button>Enter room</button>
         </form>
     </div>
-    <div id="call">
-        <div id="myStream">
-            <video id="myFace" autoplay playsinline width="400" height="400"></video>
-            <button id="mute">Mute</button>
-            <button id="camera">Turn Camera Off</button>
-            <select id="cameras"></select>
-            <video id="peerFace" autoplay playsinline width="400" height="400"></video>
-        </div>
+    <div id="broadcast">
+        <video id="broadcast-video" autoplay playsinline width="400" height="400"></video>
     </div>
 </main>
 <script>
-
-    const myFace = document.getElementById("myFace");
-    const muteBtn = document.getElementById("mute");
-    const cameraBtn = document.getElementById("camera");
-    const cameraSelect = document.getElementById("cameras");
-    const call = document.getElementById("call");
+    const broadcast = document.getElementById("broadcast");
     const myKey = Math.random().toString(36).substring(2, 11);
     let stompClient;
 
-    let myStream;
-    let muted = false;
-    let cameraOff = false;
     let roomId;
     let myPeerConnection;
     let myDataChannel;
 
-    async function getCameras() {
-        try {
-            const devices = await navigator.mediaDevices.enumerateDevices();
-            const cameras = devices.filter((device) => device.kind === "videoinput");
-            const currentCamera = myStream.getVideoTracks()[0];
-            cameras.forEach((camera) => {
-                const option = document.createElement("option");
-                option.value = camera.deviceId;
-                option.innerText = camera.label;
-                if (currentCamera.label == camera.label) {
-                    option.selected = true;
-                }
-                cameraSelect.appendChild(option);
-            });
-
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
-    async function getMedia(deviceId) {
-        const initialConstraints = {
-            audio: true,
-            video: {facingMode: "user"}
-        };
-        const cameraConstraints = {
-            audio: true,
-            video: {deviceId: {exact: deviceId}}
-        }
-        try {
-            myStream = await navigator.mediaDevices.getUserMedia(
-                deviceId ? cameraConstraints : initialConstraints
-            );
-            myFace.srcObject = myStream;
-            if (!deviceId) {
-                await getCameras();
-            }
-        } catch (e) {
-            console.log(e);
-        }
-    }
-
-    function handleMuteClick() {
-        myStream.getAudioTracks().forEach((track) => (track.enabled = muted));
-        if (!muted) {
-            muteBtn.innerText = "Unmute";
-            muted = true;
-
-        } else {
-            muteBtn.innerText = "Mute";
-            muted = false;
-        }
-    }
-
-    function handleCameraClick() {
-        myStream.getVideoTracks().forEach((track) => (track.enabled = cameraOff));
-        if (!cameraOff) {
-            cameraBtn.innerText = "turn Camera On";
-            cameraOff = true;
-        } else {
-            cameraBtn.innerText = "Turn Camera Off";
-            cameraOff = false;
-        }
-    }
-
-    async function handleCameraChange() {
-        await getMedia(cameraSelect.value);
-        if (myPeerConnection) {
-            const videoTrack = myStream.getVideoTracks()[0];
-            const videoSender = myPeerConnection.getSendders()
-                .find((sender) => sender.track.kind == "video");
-            videoSender.replaceTrack(videoTrack);
-        }
-    }
-
-    muteBtn.addEventListener("click", handleMuteClick);
-    cameraBtn.addEventListener("click", handleCameraClick);
-    cameraSelect.addEventListener("input", handleCameraChange);
-
-
-    // Welcome Form (join a room)
+    // Welcome Form (join a broadcast)
     const welcome = document.getElementById("welcome");
     const welcomeForm = welcome.querySelector("form");
 
-    call.hidden = true;
+    broadcast.hidden = true;
 
-    async function initCall() {
+    async function initBroadcast() {
         welcome.hidden = true;
-        call.hidden = false;
-        await getMedia();
-        makeConnection();
+        broadcast.hidden = false;
+        createRTCPeerConnection();
     }
 
     async function handleWelcomeSubmit(event) {
         event.preventDefault();
         const input = welcomeForm.querySelector("input");
-        await initCall();
-        //socket.emit("join_room", input.value);
-        connect(event);
+        await initBroadcast();
+        connectStomp(event);
+
         roomId = input.value;
         input.value = "";
     }
 
     welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
-    async function onConnected() {
-        // public방을 구독함 public 채팅방에 메시지가 오면 onMessageReceived 실행
-        // onMessageReceived는 화면에 채팅내용을 어떻게 보여줄 지 실행하는 함수
-        stompClient.subscribe(`/topic/${roomId}/welcome`, async (res) => {
-            const {key} = JSON.parse(res.body);
-            if (key === myKey) {
-                return;
-            }
-            myDataChannel = myPeerConnection.createDataChannel("chat");
-            myDataChannel.addEventListener("message", (event) => {
-                console.log(event);
-            });
-            console.log("made data channel");
-            const offer = await myPeerConnection.createOffer();
-            myPeerConnection.setLocalDescription(offer);
-            console.log("sent offer");
-            stompClient.send(`/app/${roomId}/offer`, {}, JSON.stringify({key: myKey, offer: offer}));
+    function connectStomp(event) {
+        stompClient = new StompJs.Client({
+            brokerURL: 'ws://localhost:8081/streaming',
+            debug: function (str) {
+                console.log(str);
+            },
+            reconnectDelay: 5000,
+            heartbeatIncoming: 4000,
+            heartbeatOutgoing: 4000,
         });
-        stompClient.subscribe(`/topic/${roomId}/offer`, async (res) => {
-            let {key, offer} = JSON.parse(res.body);
-            if (key === myKey) {
-                return;
-            }
-            myPeerConnection.addEventListener("datachannel", (event) => {
-                myDataChannel = event.channel;
-                myDataChannel.addEventListener("message", (event) => {
-                    console.log(event);
-                })
-            })
-            console.log("received the offer");
-            myPeerConnection.setRemoteDescription(offer);
-            const answer = await myPeerConnection.createAnswer();
-            console.log(answer)
-            myPeerConnection.setLocalDescription(answer);
-            stompClient.send(`/app/${roomId}/answer`, {}, JSON.stringify({key: myKey, answer: answer}));
-            console.log("sent answer");
-        })
-        stompClient.subscribe(`/topic/${roomId}/answer`, async (res) => {
-            let {key, answer} = JSON.parse(res.body);
-            if (key === myKey) {
-                return;
-            }
-            console.log("received answer")
-            myPeerConnection.setRemoteDescription(answer);
-        })
-        stompClient.subscribe(`/topic/${roomId}/ice`, async (res) => {
-            let {key, ice} = JSON.parse(res.body);
-            if (key === myKey) {
-                return;
-            }
-            console.log("received candidate");
-            myPeerConnection.addIceCandidate(ice);
-        })
-        stompClient.send(`/app/${roomId}/join_room`, {}, JSON.stringify({key: myKey}));
 
-        //connectingElement.classList.add('hidden');
+        stompClient.onConnect = onStompConnect;
+
+        stompClient.onStompError = function (frame) {
+            // Will be invoked in case of error encountered at Broker
+            // Bad login/passcode typically will cause an error
+            // Complaint brokers will set `message` header with a brief message. Body may contain details.
+            // Compliant brokers will terminate the connection after any error
+            console.log('Broker reported error: ' + frame.headers['message']);
+            console.log('Additional details: ' + frame.body);
+        };
+
+        stompClient.activate();
     }
 
+    async function onStompConnect(frame) {
+        // subscribe to streamer offer
+        stompClient.subscribe(`/topic/${roomId}/${myKey}/offer`, async (message) => {
+            // set RTC offer as remote description
+            const { key, offer } = JSON.parse(message.body);
+            myPeerConnection.setRemoteDescription(offer);
 
-    function connect(event) {
-        var socket = new SockJS('/streaming'); //WebSocketConfig에서 설정한 ws 요청주소
-        stompClient = Stomp.over(socket);
+            // send RTC answer
+            const answer = await myPeerConnection.createAnswer();
+            myPeerConnection.setLocalDescription(answer);
+            stompClient.publish({
+                destination: `/app/${roomId}/${myKey}/answer`,
+                body: JSON.stringify({ key: myKey, answer })
+            });
+        })
 
-        stompClient.connect({}, onConnected);
+        // subscribe to streamer ice candidate
+        stompClient.subscribe(`/topic/${roomId}/${myKey}/ice/streamer`, (message) => {
+            const { key, ice } = JSON.parse(message.body);
+            myPeerConnection.addIceCandidate(ice);
+        })
+
+        // publish viewer id
+        stompClient.publish({
+            destination: `/app/${roomId}`,
+            body: JSON.stringify({ key: myKey })
+        })
     }
 
     // RTC code
-
-    function makeConnection() {
+    function createRTCPeerConnection() {
         myPeerConnection = new RTCPeerConnection();
         myPeerConnection.addEventListener("icecandidate", handleIce);
-        myPeerConnection.addEventListener("addstream", handleAddStream);
-        myStream.getTracks()
-            .forEach(track => myPeerConnection.addTrack(track, myStream));
+        myPeerConnection.addEventListener("track", handleAddTrack);
     }
 
+    // Local ice candidate has changed
     function handleIce(data) {
-        console.log("got ice candidate");
-        //console.log(data);
-        stompClient.send(`/app/${roomId}/ice`, {}, JSON.stringify({key: myKey, ice: data.candidate}));
+        const iceMessage = JSON.stringify({ key: myKey, ice: data.candidate })
+        stompClient.send(`/app/${roomId}/${myKey}/ice/client`, {}, iceMessage);
     }
 
-    function handleAddStream(data) {
-        const peerFace = document.getElementById("peerFace");
-        peerFace.srcObject = data.stream;
-        // console.log("got a stream from peer");
-        // console.log("Peers stream", data.stream);
-        // console.log("My Stream", myStream);
+    // Streamer has sent a track
+    function handleAddTrack(data) {
+        const broadcastVideo = document.getElementById("broadcast-video");
+        broadcastVideo.srcObject = data.streams[0];
     }
 </script>
 </body>
