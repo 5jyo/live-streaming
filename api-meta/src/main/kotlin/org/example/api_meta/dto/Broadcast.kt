@@ -5,33 +5,33 @@ import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
 @Entity
-class Broadcast {
+class Broadcast(
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "broadcast_id", nullable = false)
-    open var id: Long? = null
+    var id: Long? = null,
 
     @Column(name = "name")
-    open var name: String? = null
+    var name: String? = null,
 
     @Column(name = "description")
-    open var description: String? = null
+    var description: String? = null,
 
     @Column(name = "started_at")
-    open var started_at: LocalDateTime? = null
+    var started_at: LocalDateTime? = null,
 
     @Column(name = "ended_at")
-    open var ended_at: OffsetDateTime? = null
+    var ended_at: OffsetDateTime? = null,
 
     @Column(name = "created_at")
-    open var created_at: LocalDateTime? = null
+    var created_at: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "modified_at")
-    open var modified_at: LocalDateTime? = null
+    var modified_at: LocalDateTime = LocalDateTime.now(),
 
     @Column(name = "status", length = 50)
-    open var status: String? = null
+    var status: String = "READY",
 
     @Column(name = "viewer_count")
-    open var viewer_count: Long? = null
-}
+    var viewer_count: Long = 0,
+)
