@@ -8,8 +8,8 @@ import org.springframework.stereotype.Controller
 @Slf4j
 @Controller
 class SignalingController {
-    @MessageMapping("/{roomId}/join_room")
-    @SendTo("/topic/{roomId}/welcome")
+    @MessageMapping("/{roomId}")
+    @SendTo("/topic/{roomId}")
     @Throws(Exception::class)
     fun joinRoom(key: String): String {
         return key
@@ -27,9 +27,15 @@ class SignalingController {
         return answer
     }
 
-    @MessageMapping("/{roomId}/{clientKey}/ice")
-    @SendTo("/topic/{roomId}/{clientKey}/ice")
-    fun ice(ice: String): String {
+    @MessageMapping("/{roomId}/{clientKey}/ice/streamer")
+    @SendTo("/topic/{roomId}/{clientKey}/ice/streamer")
+    fun streamerIce(ice: String): String {
+        return ice
+    }
+
+    @MessageMapping("/{roomId}/{clientKey}/ice/client")
+    @SendTo("/topic/{roomId}/{clientKey}/ice/client")
+    fun clientIce(ice: String): String {
         return ice
     }
 }

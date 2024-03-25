@@ -18,6 +18,5 @@ open class WebSocketBrokerConfig : WebSocketMessageBrokerConfigurer {
     override fun registerStompEndpoints(registry: StompEndpointRegistry) {
         registry.addEndpoint("/streaming")
                 .setAllowedOriginPatterns("*")
-                .withSockJS()
     }
 }
