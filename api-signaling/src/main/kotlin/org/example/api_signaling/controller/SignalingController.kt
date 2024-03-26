@@ -22,7 +22,7 @@ class SignalingController {
     }
 
     @MessageMapping("/{roomId}/{clientKey}/answer")
-    @SendTo("/topic/{roomId}{clientKey}/answer")
+    @SendTo("/topic/{roomId}/{clientKey}/answer")
     fun answer(answer: String): String {
         return answer
     }

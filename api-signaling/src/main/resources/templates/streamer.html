@@ -129,7 +129,7 @@
                 console.log("received answer")
                 await peerConnection.setRemoteDescription(answer);
             })
-            stompClient.subscribe(`/topic/${roomId}/${key}/client/ice`, async (res) => {
+            stompClient.subscribe(`/topic/${roomId}/${key}/ice/client`, async (res) => {
                 let {ice} = JSON.parse(res.body);
                 console.log("received candidate");
                 await peerConnection.addIceCandidate(ice);
@@ -146,7 +146,7 @@
 
     function initStompClient() {
         stompClient = new StompJs.Client({
-            brokerURL: 'ws://localhost:8081/streaming',
+            brokerURL: 'wss://localhost:8081/streaming',
             debug: function (str) {
                 console.log(str);
             },
@@ -177,7 +177,7 @@
             console.log("got ice candidate");
 
             stompClient.publish({
-                destination: `/app/${roomId}/${clientKey}/streamer/ice`,
+                destination: `/app/${roomId}/${clientKey}/ice/streamer`,
                 body: JSON.stringify({ice: data.candidate}),
             })
         }

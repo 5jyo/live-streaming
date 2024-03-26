@@ -59,7 +59,7 @@
 
     function connectStomp(event) {
         stompClient = new StompJs.Client({
-            brokerURL: 'ws://localhost:8081/streaming',
+            brokerURL: 'wss://10.28.188.165:8081/streaming',
             debug: function (str) {
                 console.log(str);
             },
@@ -120,6 +120,7 @@
 
     // Local ice candidate has changed
     function handleIce(data) {
+        console.log('handleIce', data);
         if(data.candidate) {
             const iceMessage = JSON.stringify({key: myKey, ice: data.candidate})
             stompClient.publish({
@@ -131,25 +132,9 @@
 
     // Streamer has sent a track
     function handleAddTrack(event) {
-        const track = event.track;
-
         const broadcastVideo = document.getElementById("broadcast-video");
-        // MediaStream 객체를 가져오거나 새로 생성합니다.
-        let remoteStream = broadcastVideo.srcObject;
-        if (!(remoteStream instanceof MediaStream)) {
-            remoteStream = new MediaStream();
-            broadcastVideo.srcObject = remoteStream;
-        }
-
-        // 트랙을 MediaStream에 추가합니다.
-        remoteStream.addTrack(track);
-
-        // 비디오 요소의 소스로 설정합니다.
-        if (track.kind === 'video') {
-            broadcastVideo.onloadedmetadata = function(e) {
-                broadcastVideo.play();
-            };
-        }
+        broadcastVideo.srcObject = event.streams[0];
+        broadcastVideo.play();
     }
 </script>
 </body>
