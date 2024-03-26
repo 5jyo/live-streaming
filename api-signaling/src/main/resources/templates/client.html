@@ -87,11 +87,11 @@
         stompClient.subscribe(`/topic/${roomId}/${myKey}/offer`, async (message) => {
             // set RTC offer as remote description
             const { key, offer } = JSON.parse(message.body);
-            myPeerConnection.setRemoteDescription(offer);
+            await myPeerConnection.setRemoteDescription(offer);
 
             // send RTC answer
             const answer = await myPeerConnection.createAnswer();
-            myPeerConnection.setLocalDescription(answer);
+            await myPeerConnection.setLocalDescription(answer);
             stompClient.publish({
                 destination: `/app/${roomId}/${myKey}/answer`,
                 body: JSON.stringify({ key: myKey, answer })
@@ -99,9 +99,9 @@
         })
 
         // subscribe to streamer ice candidate
-        stompClient.subscribe(`/topic/${roomId}/${myKey}/ice/streamer`, (message) => {
+        stompClient.subscribe(`/topic/${roomId}/${myKey}/ice/streamer`, async (message) => {
             const { key, ice } = JSON.parse(message.body);
-            myPeerConnection.addIceCandidate(ice);
+            await myPeerConnection.addIceCandidate(ice);
         })
 
         // publish viewer id
@@ -120,14 +120,36 @@
 
     // Local ice candidate has changed
     function handleIce(data) {
-        const iceMessage = JSON.stringify({ key: myKey, ice: data.candidate })
-        stompClient.send(`/app/${roomId}/${myKey}/ice/client`, {}, iceMessage);
+        if(data.candidate) {
+            const iceMessage = JSON.stringify({key: myKey, ice: data.candidate})
+            stompClient.publish({
+                destination: `/app/${roomId}/${myKey}/ice/client`,
+                body: iceMessage
+            })
+        }
     }
 
     // Streamer has sent a track
-    function handleAddTrack(data) {
+    function handleAddTrack(event) {
+        const track = event.track;
+
         const broadcastVideo = document.getElementById("broadcast-video");
-        broadcastVideo.srcObject = data.streams[0];
+        // MediaStream 객체를 가져오거나 새로 생성합니다.
+        let remoteStream = broadcastVideo.srcObject;
+        if (!(remoteStream instanceof MediaStream)) {
+            remoteStream = new MediaStream();
+            broadcastVideo.srcObject = remoteStream;
+        }
+
+        // 트랙을 MediaStream에 추가합니다.
+        remoteStream.addTrack(track);
+
+        // 비디오 요소의 소스로 설정합니다.
+        if (track.kind === 'video') {
+            broadcastVideo.onloadedmetadata = function(e) {
+                broadcastVideo.play();
+            };
+        }
     }
 </script>
 </body>
