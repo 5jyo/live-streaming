@@ -13,7 +13,16 @@
 </script>
 <body>
 <main>
-    <div id="myStream">
+    <div id="startBroadcast">
+        <form id="broadcast-form">
+            <label for="broadcast-name">Name</label>
+            <input type="text" id="broadcast-name" name="name">
+            <label for="broadcast-description">Description</label>
+            <input type="text" id="broadcast-description" name="description">
+            <button type="submit" id="start">Start Broadcast</button>
+        </form>
+    </div>
+    <div id="myStream" hidden>
         <video id="myFace" autoplay playsinline width="400" height="400"></video>
         <button id="mute">Mute</button>
         <button id="camera">Turn Camera Off</button>
@@ -21,7 +30,25 @@
     </div>
 </main>
 <script>
-    init();
+    const startBroadcastBtn = document.getElementById("broadcast-form");
+    startBroadcastBtn.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const data = new FormData(event.target);
+
+        const response = await fetch("https://localhost:8080/broadcasts", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                name: data.get("name"),
+                description: data.get("description"),
+            }),
+        }).then((res) => res.json());
+
+        roomId = response.id;
+        await init();
+    });
 
     const myFace = document.getElementById("myFace");
     const muteBtn = document.getElementById("mute");
@@ -105,10 +132,10 @@
     cameraBtn.addEventListener("click", handleCameraClick);
 
     async function init() {
-        await getMedia();
-
-        roomId = 2 // sample room id
+        await getMedia();// sample room id
         initStompClient();
+        document.getElementById("startBroadcast").hidden = true;
+        document.getElementById("myStream").hidden = false;
     }
 
     async function onConnected() {
