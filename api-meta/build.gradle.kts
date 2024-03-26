@@ -10,6 +10,7 @@ dependencies {
     implementation("org.apache.commons:commons-text")
     implementation(project(":utilities"))
     implementation("org.springframework.boot:spring-boot-starter-web")
-//    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("com.h2database:h2")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 //    implementation("com.mysql:mysql-connector-j")
 }

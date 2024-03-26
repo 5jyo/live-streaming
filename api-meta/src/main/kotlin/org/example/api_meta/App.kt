@@ -7,7 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-open class ApiMetaApplication
+class ApiMetaApplication
 
 fun main(args: Array<String>) {
     runApplication<ApiMetaApplication>(*args)
