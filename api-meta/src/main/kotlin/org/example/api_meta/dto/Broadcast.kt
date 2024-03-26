@@ -29,8 +29,9 @@ class Broadcast(
     @Column(name = "modified_at")
     var modified_at: LocalDateTime = LocalDateTime.now(),
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 50)
-    var status: String = "READY",
+    var status: BroadcastStatus = BroadcastStatus.READY,
 
     @Column(name = "viewer_count")
     var viewer_count: Long = 0,
