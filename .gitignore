@@ -7,3 +7,5 @@ build
 # Ignore idea metadata
 .idea
 
+# Ignore private environment variables for http client
+**/http-client.private.env.json

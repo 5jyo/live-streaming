@@ -1,0 +1,12 @@
+### Get a list of streamers
+GET {{metaHost}}/broadcasts
+
+### Create a streamer
+POST {{metaHost}}/broadcasts
+content-type: application/json
+
+{
+  "name": "{{name}}",
+  "description": "{{description}}"
+}
+
