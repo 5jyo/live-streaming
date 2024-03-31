@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -28,14 +28,15 @@
         <button id="camera">Turn Camera Off</button>
         <select id="cameras"></select>
     </div>
+    <p th:text="${hello}"/>
 </main>
-<script>
+<script th:inline="javascript">
     const startBroadcastBtn = document.getElementById("broadcast-form");
     startBroadcastBtn.addEventListener("submit", async (event) => {
         event.preventDefault();
         const data = new FormData(event.target);
 
-        const response = await fetch("https://localhost:8080/broadcasts", {
+        const response = await fetch("[(${host.meta})]/broadcasts", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -173,7 +174,7 @@
 
     function initStompClient() {
         stompClient = new StompJs.Client({
-            brokerURL: 'wss://localhost:8081/streaming',
+            brokerURL: "[(${host.signaling})]/streaming",
             debug: function (str) {
                 console.log(str);
             },

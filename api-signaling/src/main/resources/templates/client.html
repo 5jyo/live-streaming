@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -24,7 +24,7 @@
         <video id="broadcast-video" autoplay playsinline width="400" height="400"></video>
     </div>
 </main>
-<script>
+<script th:inline="javascript">
     const broadcast = document.getElementById("broadcast");
     const myKey = Math.random().toString(36).substring(2, 11);
     let stompClient;
@@ -59,7 +59,7 @@
 
     function connectStomp(event) {
         stompClient = new StompJs.Client({
-            brokerURL: 'wss://10.28.188.165:8081/streaming',
+            brokerURL: "[(${host.signaling})]/streaming",
             debug: function (str) {
                 console.log(str);
             },
