@@ -10,3 +10,22 @@ spring:
   thymeleaf:
     prefix: classpath:/templates/
     cache: false
+  profiles:
+    active: local # default profile
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+host: # org.example.api_signaling.properties.HostProperties
+  signaling: 'wss://localhost:8081'
+  meta: 'https://localhost:8080'
+
+---
+spring:
+  config:
+    activate:
+      on-profile: cloud
+host: # org.example.api_signaling.properties.HostProperties
+  signaling: wss://todo # TODO: [HOST] Set to AWS domain
+  meta: https://localhost:8080 # TODO: [HOST] Set to AWS domain
