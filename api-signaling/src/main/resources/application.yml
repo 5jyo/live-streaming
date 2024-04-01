@@ -27,5 +27,5 @@ spring:
     activate:
       on-profile: cloud
 host: # org.example.api_signaling.properties.HostProperties
-  signaling: wss://todo # TODO: [HOST] Set to AWS domain
-  meta: https://localhost:8080 # TODO: [HOST] Set to AWS domain
+  signaling: 'wss://5jyo.site'
+  meta: 'https://5jyo.site'
