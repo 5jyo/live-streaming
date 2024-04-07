@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        #broadcast-list li {
+            cursor: pointer;
+            padding: 10px;
+            border-bottom: 1px solid #ccc;
+            list-style-type: none; /* Remove default list style */
+        }
+        #broadcast-list li:hover {
+            background-color: #f0f0f0;
+        }
+        #broadcast-list h3 {
+            margin: 0; /* Adjust spacing as needed */
+        }
+        #broadcast-list p {
+            margin: 5px 0; /* Adjust spacing as needed */
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/mvp.css">
+
+</head>
+<script>
+
+</script>
+<body onload="fetchStreamers()">
+
+<main>
+    <h1> Broadcast Lists </h1>
+    <ul id="broadcast-list">
+    </ul>
+</main>
+<script th:inline="javascript">
+    async function fetchStreamers() {
+
+        const broadcastListElement = document.getElementById('broadcast-list')
+        broadcastListElement.innerHTML = ''; // Clear existing items
+
+        const broadcasts = await getBroadcasts();
+        broadcasts.forEach((broadcast) => {
+            const item = document.createElement('li')
+            item.setAttribute('data-broadcast-id', broadcast.id);
+            item.innerHTML = `
+                <div>
+                    <h3>${broadcast.name}</h3>
+                    <p>${broadcast.description}</p>
+                    <p>Status: ${broadcast.status}, Viewers: ${broadcast.viewer_count}</p>
+                </div>
+            `;
+            item.addEventListener('click', () => {
+                // Redirect or perform another action on click
+                window.location.href = `/client/${broadcast.id}`;
+            });
+            broadcastListElement.appendChild(item)
+        });
+
+        async function getBroadcasts() {
+            const response = await fetch('[(${host.meta})]/broadcasts')
+            return response.json()
+        }
+    }
+</script>
+
+</body>
+</html>
