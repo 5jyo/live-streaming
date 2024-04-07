@@ -19,7 +19,7 @@ spring:
       on-profile: local
 host: # org.example.api_signaling.properties.HostProperties
   signaling: 'wss://localhost:8081'
-  meta: 'https://localhost:8080'
+  meta: 'http://localhost:8080'
 
 ---
 spring:
