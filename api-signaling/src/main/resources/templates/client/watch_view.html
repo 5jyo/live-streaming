@@ -8,73 +8,22 @@
     <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/mvp.css">
 </head>
-<script>
-
-</script>
-<body>
-
+<body onload="init()">
 <main>
-    <div id="welcome">
-        <form>
-            <input/>
-            <button>Enter room</button>
-        </form>
-    </div>
     <div id="broadcast">
-        <video id="broadcast-video" autoplay playsinline width="400" height="400"></video>
+        <video id="broadcast-video" muted autoplay playsinline width="400" height="400"></video>
     </div>
-    <ul id="streamers">
-    </ul>
 </main>
 <script th:inline="javascript">
     const broadcast = document.getElementById("broadcast");
     const myKey = Math.random().toString(36).substring(2, 11);
     let stompClient;
 
-    let roomId;
+    let roomId = [(${roomId})];
     let myPeerConnection;
     let myDataChannel;
 
-    // Welcome Form (join a broadcast)
-    const welcome = document.getElementById("welcome");
-    const welcomeForm = welcome.querySelector("form");
-
-    broadcast.hidden = true;
-
-    const streamers = document.getElementById('streamers')
-    getStreamers().then(data => {
-        data.forEach((streamer) => {
-            var item = document.createElement('li')
-            item.appendChild(document.createTextNode(`${streamer.name || '{streamer name is empty}'} is ${streamer.status.toLowerCase()}. Room number: ${streamer.id}`))
-            streamers.appendChild(item)
-        })
-    })
-
-    async function getStreamers() {
-        const response = await fetch('https://localhost:8080/broadcasts')
-        console.log('response:', response)
-        return response.json()
-    }
-
-    async function initBroadcast() {
-        welcome.hidden = true;
-        broadcast.hidden = false;
-        createRTCPeerConnection();
-    }
-
-    async function handleWelcomeSubmit(event) {
-        event.preventDefault();
-        const input = welcomeForm.querySelector("input");
-        await initBroadcast();
-        connectStomp(event);
-
-        roomId = input.value;
-        input.value = "";
-    }
-
-    welcomeForm.addEventListener("submit", handleWelcomeSubmit);
-
-    function connectStomp(event) {
+    function connectStomp() {
         stompClient = new StompJs.Client({
             brokerURL: "[(${host.signaling})]/streaming",
             debug: function (str) {
@@ -139,7 +88,7 @@
                 { urls: 'stun:stun4.l.google.com:19302' }
             ]
         }
-        let myPeerConnection = new RTCPeerConnection(configuration);
+        myPeerConnection = new RTCPeerConnection(configuration);
         myPeerConnection.addEventListener("icecandidate", handleIce);
         myPeerConnection.addEventListener("track", handleAddTrack);
     }
@@ -162,6 +111,13 @@
         broadcastVideo.srcObject = event.streams[0];
         broadcastVideo.play();
     }
+
+    function init() {
+        createRTCPeerConnection();
+        connectStomp();
+    }
+
 </script>
+
 </body>
 </html>
