@@ -2,6 +2,7 @@ package org.example.api_meta.controller
 
 import org.example.api_meta.dto.Broadcast
 import org.example.api_meta.dto.BroadcastForm
+import org.example.api_meta.dto.BroadcastUpdateForm
 import org.example.api_meta.service.BroadcastService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -29,6 +30,14 @@ class BroadcastController(
         val broadcast = broadcastService.create(broadcastForm)
             ?: return ResponseEntity.badRequest().build()
         return ResponseEntity(broadcast, HttpStatus.CREATED)
+    }
+
+    @PutMapping("/broadcasts/{broadcast_id}")
+    fun update(@PathVariable("broadcast_id") broadcastId: Long,
+        @RequestBody broadcastUpdateForm : BroadcastUpdateForm): ResponseEntity<Broadcast> {
+        val broadcast = broadcastService.update(broadcastId, broadcastUpdateForm)
+            ?: return ResponseEntity.badRequest().build()
+        return ResponseEntity(broadcast, HttpStatus.OK)
     }
 
 }

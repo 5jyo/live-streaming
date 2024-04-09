@@ -1,6 +1,7 @@
 package org.example.api_signaling.controller
 
 import lombok.extern.slf4j.Slf4j
+import org.example.api_signaling.service.BroadcastMetadataService
 import org.springframework.context.event.EventListener
 import org.springframework.messaging.handler.annotation.DestinationVariable
 import org.springframework.messaging.handler.annotation.Header
@@ -17,7 +18,7 @@ import kotlin.reflect.jvm.internal.impl.load.kotlin.JvmType
 
 @Slf4j
 @Controller
-class SignalingController {
+class SignalingController(private val broadcastMetadataService: BroadcastMetadataService) {
     val sessionIdToRoomId = ConcurrentHashMap<String, String>()
     val roomIdToUserSet = ConcurrentHashMap<String, Set<String>>()
 
@@ -40,6 +41,7 @@ class SignalingController {
             sessionIdToRoomId.remove(event.sessionId)
             updatedSet
         }
+        broadcastMetadataService.updateViewerCount(roomId, roomIdToUserSet[roomId]?.size?.toLong())
     }
 
     @MessageMapping("/{roomId}")
@@ -52,6 +54,7 @@ class SignalingController {
             updatedSet.add(simpSessionId)
             updatedSet
         }
+        broadcastMetadataService.updateViewerCount(roomId, roomIdToUserSet[roomId]?.size?.toLong())
         return key
     }
 
