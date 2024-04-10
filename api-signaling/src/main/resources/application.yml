@@ -1,7 +1,7 @@
 server:
   port: 8081
   ssl:
-    enabled: true
+    enabled: false
     key-store: classpath:keystore/baeldung.p12
     key-store-password: password
     key-store-type: PKCS12
@@ -18,7 +18,7 @@ spring:
     activate:
       on-profile: local
 host: # org.example.api_signaling.properties.HostProperties
-  signaling: 'wss://localhost:8081'
+  signaling: 'ws://localhost:8081'
   meta: 'http://localhost:8080'
 
 ---
