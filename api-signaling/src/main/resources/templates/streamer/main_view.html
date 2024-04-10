@@ -23,7 +23,7 @@
         </form>
     </div>
     <div id="myStream" hidden>
-        <video id="myFace" autoplay playsinline width="400" height="400"></video>
+        <video id="myFace" muted autoplay playsinline width="400" height="400"></video>
         <button id="mute">Mute</button>
         <button id="camera">Turn Camera Off</button>
         <select id="cameras"></select>
@@ -192,11 +192,11 @@
     function makeConnection(clientKey) {
         const configuration = {
             iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-                { urls: 'stun:stun2.l.google.com:19302' },
-                { urls: 'stun:stun3.l.google.com:19302' },
-                { urls: 'stun:stun4.l.google.com:19302' }
+                {
+                    urls: 'turn:15.164.149.184:8082',
+                    username: 'username',
+                    credential: 'password'
+                }
             ]
         }
         let peerConnection = new RTCPeerConnection(configuration);
