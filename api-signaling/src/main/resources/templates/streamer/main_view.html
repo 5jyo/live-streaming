@@ -190,6 +190,12 @@
     // RTC code
 
     function makeConnection(clientKey) {
+        const existingConnection = peerConnectionMap.get(clientKey)
+        if (existingConnection
+            && existingConnection.iceConnectionState === 'connected') {
+            console.log(`${clientKey} has existing connection. Skip creating new one`)
+            return
+        }
         const configuration = {
             iceServers: [
                 {
