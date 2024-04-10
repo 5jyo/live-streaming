@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  api-meta:
+    build:
+      context: ./api-meta
+      args:
+        JAR_FILE: build/libs/api-meta.jar
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: "local"
+    networks:
+      - springnet
+  api-signaling:
+    build:
+      context: ./api-signaling
+      args:
+        JAR_FILE: build/libs/api-signaling.jar
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_PROFILES_ACTIVE: "docker"
+    networks:
+      - springnet
+networks:
+  springnet:
+    driver: bridge
