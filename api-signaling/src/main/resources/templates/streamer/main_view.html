@@ -1,6 +1,22 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .chatbox {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            background: #fff;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-wrap: break-word;
+        }
+    </style>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,13 +38,15 @@
             <button type="submit" id="start">Start Broadcast</button>
         </form>
     </div>
-    <div id="myStream" hidden>
-        <video id="myFace" muted autoplay playsinline width="400" height="400"></video>
-        <button id="mute">Mute</button>
-        <button id="camera">Turn Camera Off</button>
-        <select id="cameras"></select>
+    <div class="container">
+        <div id="myStream" hidden>
+            <video id="myFace" muted autoplay playsinline width="400" height="400"></video>
+            <button id="mute">Mute</button>
+            <button id="camera">Turn Camera Off</button>
+            <select id="cameras"></select>
+        </div>
+        <div id="chatbox" class="chatbox" hidden></div>
     </div>
-    <p th:text="${hello}"/>
 </main>
 <script th:inline="javascript">
     const startBroadcastBtn = document.getElementById("broadcast-form");
@@ -63,6 +81,7 @@
     let roomId;
 
     const peerConnectionMap = new Map();
+    const peerDataChannelMap = new Map();
 
     async function getCameras() {
         try {
@@ -137,6 +156,7 @@
         initStompClient();
         document.getElementById("startBroadcast").hidden = true;
         document.getElementById("myStream").hidden = false;
+        document.getElementById("chatbox").hidden = false;
     }
 
     async function onConnected() {
@@ -210,9 +230,38 @@
         peerConnectionMap.set(clientKey, peerConnection);
         peerConnection.addEventListener("icecandidate", (data) => handleIce(data, clientKey))
 
+        let peerDataChannel = peerConnection.createDataChannel('chat')
+        peerDataChannelMap.set(clientKey, peerDataChannel)
+        peerDataChannel.onmessage = handleDataChannelOnMessage
+        
         myStream.getTracks()
                 .forEach(track => peerConnection.addTrack(track, myStream));
         return peerConnection;
+    }
+
+    function handleDataChannelOnMessage({data}) {
+        const {clientKey, message} = JSON.parse(data)
+        const chatMessage = `${clientKey}: ${message}\n`
+        addChat(chatMessage)
+        broadcastMessage([...peerDataChannelMap.keys()].filter(k => k !== clientKey), JSON.stringify({clientKey, message}))
+    }
+
+    function broadcastMessage(clientKeys, messageJson) {
+        clientKeys.forEach(key => {
+            const dataChannel = peerDataChannelMap.get(key)
+            if (dataChannel.readyState !== 'open') {
+                return
+            }
+            dataChannel.send(messageJson)
+        })
+    }
+
+    function addChat(message) {
+        const chatbox = document.getElementById('chatbox');
+        const newMessage = document.createElement('p');
+        newMessage.textContent = message;
+        chatbox.appendChild(newMessage);
+        chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the bottom
     }
 
     function handleIce(data, clientKey) {
