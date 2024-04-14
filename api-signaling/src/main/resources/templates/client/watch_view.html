@@ -1,6 +1,28 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
+    <style>
+        .container {
+            display: flex;
+            justify-content: space-between;
+        }
+        .chatbox {
+            width: 300px;
+            height: 400px;
+            border: 1px solid #ccc;
+            background: #fff;
+            overflow-y: scroll;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-wrap: break-word;
+        }
+
+        .input-box {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+        }
+    </style>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +32,19 @@
 </head>
 <body onload="init()">
 <main>
-    <div id="broadcast">
-        <video id="broadcast-video" controls muted autoplay playsinline width="400" height="400"></video>
+    <div id="info_header">
+        <span>ID: </span>
+        <span id="user_id"></span>
+    </div>
+    <div class="container">
+        <div id="broadcast">
+            <video id="broadcast-video" controls muted autoplay playsinline width="400" height="400"></video>
+        </div>
+        <div id="chat_container" hidden>
+            <div id="chatbox" class="chatbox"></div>
+            <input type="text" id="chat" class="input-box"></input>
+            <button onclick="handleSendChatMessage()">Send Message</button>
+        </div>
     </div>
 </main>
 <script th:inline="javascript">
@@ -91,6 +124,39 @@
         myPeerConnection = new RTCPeerConnection(configuration);
         myPeerConnection.addEventListener("icecandidate", handleIce);
         myPeerConnection.addEventListener("track", handleAddTrack);
+        myPeerConnection.ondatachannel = (event) => {
+            myDataChannel = event.channel;
+            myDataChannel.onopen = (event) => {
+                document.getElementById("chat_container").hidden=false;
+            };
+            myDataChannel.onmessage = (event) => {
+                const {clientKey, message} = JSON.parse(event.data)
+                addChat(`${clientKey}: ${message}\n`);
+            };
+          };
+    }
+
+    function handleSendChatMessage() {
+        const userInput = document.getElementById('chat').value;
+        document.getElementById('chat').value = '';
+        addChat(`${myKey}: ${userInput}\n`, (message) => {
+            const boldMessage = document.createElement('strong');
+            boldMessage.textContent = message;
+            return boldMessage
+        });
+        myDataChannel.send(JSON.stringify({clientKey: myKey, message: userInput}))
+    }
+
+    function addChat(message, decorator) {
+        const chatbox = document.getElementById('chatbox');
+        const chatMessageContainer = document.createElement('p');
+        if (decorator) {
+            chatMessageContainer.appendChild(decorator(message))
+        } else {
+            chatMessageContainer.textContent = message;
+        }
+        chatbox.appendChild(chatMessageContainer);
+        chatbox.scrollTop = chatbox.scrollHeight; // Scroll to the bottom
     }
 
     // Local ice candidate has changed
@@ -115,6 +181,13 @@
     function init() {
         createRTCPeerConnection();
         connectStomp();
+        document.getElementById("user_id").innerText = myKey;
+        document.getElementById('chat').addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                handleSendChatMessage();
+            }
+        });
     }
 
 </script>
