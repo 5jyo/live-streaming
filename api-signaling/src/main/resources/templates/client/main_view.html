@@ -43,6 +43,7 @@
         broadcastListElement.innerHTML = ''; // Clear existing items
 
         const broadcasts = await getBroadcasts();
+        broadcasts.reverse();
         broadcasts.forEach((broadcast) => {
             const item = document.createElement('li')
             item.setAttribute('data-broadcast-id', broadcast.id);
