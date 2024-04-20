@@ -20,6 +20,16 @@ spring:
 host: # org.example.api_signaling.properties.HostProperties
   signaling: 'ws://localhost:8081'
   meta: 'http://localhost:8080'
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+host: # org.example.api_signaling.properties.HostProperties
+  signaling: 'ws://localhost:8081'
+  meta: 'http://localhost:8080'
+  docker:
+    meta: 'http://api-meta:8080' # Need to set docker domain for communication
 
 ---
 spring:
@@ -27,5 +37,5 @@ spring:
     activate:
       on-profile: cloud
 host: # org.example.api_signaling.properties.HostProperties
-  signaling: wss://5jyo.site # TODO: [HOST] Set to AWS domain
-  meta: https://5jyo.site # TODO: [HOST] Set to AWS domain
+  signaling: wss://5jyo.site
+  meta: https://5jyo.site

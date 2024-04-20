@@ -12,7 +12,10 @@ import org.springframework.web.service.invoker.HttpServiceProxyFactory
 class HttpClientConfig(private val hostProperties: HostProperties) {
     @Bean
     fun metaApiClient(builder: RestClient.Builder): MetaApiClient {
-        val restClient = builder.baseUrl(hostProperties.meta).build()
+        // Set to docker domain if exists.
+        // signaling docker container can't resolve localhost as meta api in bridge network
+        val baseUrl = hostProperties.docker?.meta ?: hostProperties.meta
+        val restClient = builder.baseUrl(baseUrl).build()
         return HttpServiceProxyFactory.builderFor(RestClientAdapter.create(restClient)).build()
             .createClient(MetaApiClient::class.java)
     }
